@@ -1,0 +1,42 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'
+
+- script: |
+    echo "Creating solution file dynamically..."
+
+    # Create new solution named MyApp.sln in current directory
+    dotnet new sln -n MyApp
+
+    echo "Adding all projects to solution..."
+
+    # Find and add all .csproj files to the solution
+    for proj in $(find . -name '*.csproj'); do
+      echo "Adding $proj"
+      dotnet sln MyApp.sln add "$proj"
+    done
+
+    echo "Listing solution projects:"
+    dotnet sln list
+
+  displayName: 'Create solution and add projects'
+
+- script: dotnet build MyApp.sln --configuration $(buildConfiguration)
+  displayName: 'Build solution'
+
